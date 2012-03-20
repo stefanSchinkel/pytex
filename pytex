@@ -1,0 +1,171 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+	Purpose:
+		A thin wrapper for pdflatex/bibtex.
+		Once called, the wrapper compiles & recompiles
+		the LaTeX file given to fix references/crosslinks.
+		Further it calls bibtex whenever needed.
+		
+	Requirements:
+		- pdflatex/bibtex in your $PATH	
+
+	* Copyright (c) 2008, Stefan Schinkel, University of Potsdam
+	* All rights reserved.
+	*
+	* Redistribution and use in source and binary forms, with or without
+	* modification, are permitted provided that the following conditions are met:
+	*     * Redistributions of source code must retain the above copyright
+	*       notice, this list of conditions and the following disclaimer.
+	*     * Redistributions in binary form must reproduce the above copyright
+	*       notice, this list of conditions and the following disclaimer in the
+	*       documentation and/or other materials provided with the distribution.
+	*     * Neither the name of the University of Potsdam nor the
+	*       names of its contributors may be used to endorse or promote products
+	*       derived from this software without specific prior written permission.
+	*
+	* THIS SOFTWARE IS PROVIDED BY Stefan Schinkel ''AS IS'' AND ANY
+	* EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+	* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+	* DISCLAIMED. IN NO EVENT SHALL Stefan Schinkel BE LIABLE FOR ANY
+	* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+	* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+	* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+	* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+	* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+	* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""
+
+__version__ = "0.1"
+
+#Imports
+import sys,os
+
+##########################
+##	I/O check	##
+##########################
+
+try: 
+	file = sys.argv[1] 
+except IndexError:
+		print "This is PyTeX Version: %s\n" % __version__
+		print "ERROR: No latex file given!"
+		print "Calling convention: pytex latexFile(.tex)\n" 		
+		exit(-1)
+
+
+# MY pdflatex is smart enough to deal with extensionless TeX files others may not. 
+if file.endswith(".tex"):
+	pass
+elif file.endswith("."):# due to tabcompletion
+	file = file + "tex"
+else:
+	file = file + ".tex"
+
+
+##########################
+##	Functions 	##
+##########################
+
+def runLatex(file):
+	
+	"""
+	This function opens a pipe to the pdflatex binary,
+	compiles the file & parses the log. 
+	"""
+
+	#assemble command and force latex to not stop
+	cmd = "pdflatex -interaction=nonstopmode " + file
+
+	# empty logMessage & default errorCode
+	logMessage = [];errorCode = 0	
+	
+	# store log in list
+	runLog = os.popen(cmd).readlines()
+	
+	#loop over list 
+	for i in range(len(runLog)) :
+		
+		#current line
+		line = runLog[i];
+		
+		if  "!" in line: 
+			logMessage.append(line)		
+			logMessage.append(runLog[i+1])				
+			errorCode = 1
+			break
+		elif "Citation" in line:
+			logMessage.append(line)			
+			errorCode = 2		
+			break
+		elif "LaTeX Warning" in line: 
+			logMessage.append(line)			
+			errorCode = 3		
+			break
+						
+	return (logMessage,errorCode)
+
+def runBibtex(file):			
+
+	"""
+	Call bibtex on auxilary file
+	"""
+
+	cmd = "bibtex " + file[:-4] + ".aux"
+	os.popen(cmd)	
+
+
+##########################
+##	Implementation	##
+##########################
+
+if __name__ == '__main__':
+	# runCounters
+	latexRuns = 0;bibtexRuns = 0 
+
+	print "This is PyTeX Version: %s" % __version__	
+	print "Running pdflatex on file:  " + file	
+	
+	#call function
+	while True:
+	
+		# break if reruns didn't work &
+		if bibtexRuns == 3 or latexRuns == 3:
+			if errorCode ==  3:
+				print "Unresolvable warning occurred."
+				for line in logMessage:
+					print line[:-2]
+				break
+			else:
+				print "Unresolvable error occurred. Check your document!"
+				for line in logMessage:
+					print line[:-2]
+				break
+	
+		# compile tex
+		(logMessage,errorCode) = runLatex(file)
+	
+		#increment latexCounter
+		latexRuns += 1
+		
+		if errorCode == 0: 	# all is well	
+			print "Successfully compiled " + file
+			break
+	
+		elif errorCode == 1: #critical error
+			print "The following error(s)/warning(s) occured:"		
+			for line in logMessage:
+				print line[:-2]
+			break	
+			
+		elif errorCode == 2: # run bibTex
+			print "Undefined References. Running bibtex."	
+			runBibtex(file)
+			bibtexRuns += 1
+	
+		elif errorCode == 3: 
+			# recompile on warning			
+			pass
+	

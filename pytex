@@ -48,7 +48,7 @@ import sys,os
 ##########################
 
 try: 
-	file = sys.argv[1] 
+	texFile = sys.argv[1] 
 except IndexError:
 		print "This is PyTeX Version: %s\n" % __version__
 		print "ERROR: No latex file given!"
@@ -57,12 +57,18 @@ except IndexError:
 
 
 # MY pdflatex is smart enough to deal with extensionless TeX files others may not. 
-if file.endswith(".tex"):
+if texFile.endswith(".tex"):
 	pass
-elif file.endswith("."):# due to tabcompletion
-	file = file + "tex"
+elif texFile.endswith("."):# due to tabcompletion
+	texFile = texFile + "tex"
 else:
-	file = file + ".tex"
+	texFile = texFile + ".tex"
+
+try: 
+	tmp = sys.argv[2] 
+	flagRemoveAux = True
+except IndexError:
+	flagRemoveAux = False
 
 
 ##########################
@@ -77,7 +83,7 @@ def runLatex(file):
 	"""
 
 	#assemble command and force latex to not stop
-	cmd = "pdflatex -interaction=nonstopmode " + file
+	cmd = "pdflatex -interaction=nonstopmode " + texFile
 
 	# empty logMessage & default errorCode
 	logMessage = [];errorCode = 0	
@@ -113,7 +119,7 @@ def runBibtex(file):
 	Call bibtex on auxilary file
 	"""
 
-	cmd = "bibtex " + file[:-4] + ".aux"
+	cmd = "bibtex " + texFile[:-4] + ".aux"
 	os.popen(cmd)	
 
 
@@ -126,7 +132,7 @@ if __name__ == '__main__':
 	latexRuns = 0;bibtexRuns = 0 
 
 	print "This is PyTeX Version: %s" % __version__	
-	print "Running pdflatex on file:  " + file	
+	print "Running pdflatex on file:  " + texFile	
 	
 	#call function
 	while True:
@@ -145,21 +151,21 @@ if __name__ == '__main__':
 				break
 	
 		# compile tex
-		(logMessage,errorCode) = runLatex(file)
+		(logMessage,errorCode) = runLatex(texFile)
 	
 		#increment latexCounter
 		latexRuns += 1
 		
 		if errorCode == 0: 	# all is well	
-			print "Successfully compiled " + file
+			print "Successfully compiled " + texFile
 			break
 	
 		elif errorCode == 1: #critical error
 			print "The following error(s)/warning(s) occured:"		
 			for line in logMessage:
 				print line[:-2]
-			break	
-			
+			break
+		
 		elif errorCode == 2: # run bibTex
 			print "Undefined References. Running bibtex."	
 			runBibtex(file)
@@ -169,3 +175,15 @@ if __name__ == '__main__':
 			# recompile on warning			
 			pass
 	
+	## remove auxilary files, if requested
+	if flagRemoveAux == True: 
+		print "Will remove auxilary files"
+
+		for item in ['log','aux','bbl','blg','spl']:
+			theFile = texFile[:-4] + "." + item
+			try:
+				os.remove(theFile)
+			except Exception, e:
+				print "Error:", e
+	
+

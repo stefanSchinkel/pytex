@@ -98,9 +98,14 @@ def runLatex(file):
 		line = runLog[i];
 		
 		if  "!" in line: 
-			logMessage.append(line)		
-			logMessage.append(runLog[i+1])				
-			errorCode = 1
+			#this happens w/ the bloody APAcite
+			if "NOT AUSTRALIAN!!!" in line:
+				logMessage.append(line)			
+				errorCode = 0	
+			else:
+				logMessage.append(line)		
+				logMessage.append(runLog[i+1])				
+				errorCode = 1
 			break
 		elif "Citation" in line:
 			logMessage.append(line)			

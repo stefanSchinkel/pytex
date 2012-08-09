@@ -100,7 +100,7 @@ def runLatex(file):
 		if  "!" in line: 
 			#this happens w/ the bloody APAcite
 			if "NOT AUSTRALIAN!!!" in line:
-				logMessage.append(line)			
+				print "Apacite package used"			
 				errorCode = 0	
 			else:
 				logMessage.append(line)		

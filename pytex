@@ -97,16 +97,16 @@ def runLatex(file):
 		#current line
 		line = runLog[i];
 		
+		#this happens w/ the bloody APAcite
+		if "NOT AUSTRALIAN!!!" in line:
+			print "Apacite package used"			
+			errorCode = 0	
+			continue
 		if  "!" in line: 
-			#this happens w/ the bloody APAcite
-			if "NOT AUSTRALIAN!!!" in line:
-				print "Apacite package used"			
-				errorCode = 0	
-			else:
-				logMessage.append(line)		
-				logMessage.append(runLog[i+1])				
-				errorCode = 1
-			break
+			logMessage.append(line)		
+			logMessage.append(runLog[i+1])				
+			errorCode = 1
+				
 		elif "Citation" in line:
 			logMessage.append(line)			
 			errorCode = 2		
@@ -114,10 +114,10 @@ def runLatex(file):
 		elif "LaTeX Warning" in line: 
 			logMessage.append(line)			
 			errorCode = 3		
-			break
+	
+	print "Errorcode is " + str(errorCode)
 						
 	return (logMessage,errorCode)
-
 def runBibtex(file):			
 
 	"""

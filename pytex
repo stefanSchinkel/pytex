@@ -102,10 +102,11 @@ def runLatex(file):
 			print "Apacite package used"			
 			errorCode = 0	
 			continue
-		if  "!" in line: 
+		if  line.startswith('!'):
 			logMessage.append(line)		
-			logMessage.append(runLog[i+1])				
+			logMessage.append(runLog[i+1])
 			errorCode = 1
+			break				
 				
 		elif "Citation" in line:
 			logMessage.append(line)			
@@ -115,9 +116,10 @@ def runLatex(file):
 			logMessage.append(line)			
 			errorCode = 3		
 	
-	print "Errorcode is " + str(errorCode)
+	#print "Errorcode is " + str(errorCode)
 						
 	return (logMessage,errorCode)
+
 def runBibtex(file):			
 
 	"""
@@ -127,6 +129,12 @@ def runBibtex(file):
 	cmd = "bibtex " + texFile[:-4] + ".aux"
 	os.popen(cmd)	
 
+def printLog(logMessage):
+	"""
+		shorthand for printing logs
+	"""
+	for line in logMessage:
+		print line[:-2]
 
 ##########################
 ##	Implementation	##
@@ -140,20 +148,7 @@ if __name__ == '__main__':
 	print "Running pdflatex on file:  " + texFile	
 	
 	#call function
-	while True:
-	
-		# break if reruns didn't work &
-		if bibtexRuns == 3 or latexRuns == 3:
-			if errorCode ==  3:
-				print "Unresolvable warning occurred."
-				for line in logMessage:
-					print line[:-2]
-				break
-			else:
-				print "Unresolvable error occurred. Check your document!"
-				for line in logMessage:
-					print line[:-2]
-				break
+	while (bibtexRuns < 3) and (latexRuns <	 3):
 	
 		# compile tex
 		(logMessage,errorCode) = runLatex(texFile)
@@ -166,9 +161,9 @@ if __name__ == '__main__':
 			break
 	
 		elif errorCode == 1: #critical error
-			print "The following error(s)/warning(s) occured:"		
-			for line in logMessage:
-				print line[:-2]
+			
+			print "The following error(s) occured:"		
+			printLog(logMessage)
 			break
 		
 		elif errorCode == 2: # run bibTex
@@ -177,8 +172,12 @@ if __name__ == '__main__':
 			bibtexRuns += 1
 	
 		elif errorCode == 3: 
-			# recompile on warning			
+			print "Latex warning. Recompiling."	
 			pass
+	
+	if errorCode == 3:
+		print "Unresolvable warning occurred."
+		printLog(logMessage)
 	
 	## remove auxilary files, if requested
 	if flagRemoveAux == True: 
@@ -191,4 +190,3 @@ if __name__ == '__main__':
 			except Exception, e:
 				print "Error:", e
 	
-

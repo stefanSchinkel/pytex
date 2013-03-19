@@ -183,7 +183,7 @@ if __name__ == '__main__':
 	if flagRemoveAux == True: 
 		print "Will remove auxilary files"
 
-		for item in ['log','aux','bbl','blg','spl']:
+		for item in ['log','aux','bbl','blg','spl','out']:
 			theFile = texFile[:-4] + "." + item
 			try:
 				os.remove(theFile)

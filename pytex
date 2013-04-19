@@ -102,7 +102,7 @@ def runLatex(file):
 			print "Apacite package used"			
 			errorCode = 0	
 			continue
-		if  line.startswith('!'):
+		if  "!" in line:
 			logMessage.append(line)		
 			logMessage.append(runLog[i+1])
 			errorCode = 1

@@ -1,19 +1,40 @@
-\documentclass[]{article}
-
+\documentclass{article}
 
 \begin{document}
 
-\begin{abstract}
-In the recent past, recurrence quantification analysis (RQA) has gained an increasing interest
-in various research areas. The complexity measures it provides have been useful in 
-describing and analysing a broad range of data. It is known to be rather robust to noise and 
-nonstationarities.
-Yet, one key question in empirical research concerns
-the confidence bounds of measured data. In the present letter
-we will suggest a method for estimating the confidence bounds of recurrence-based complexity 
-measures. We will study the applicablity of the suggested method with model and real-life data. 
-\cidfte{fajs}
-\end{abstract}
+py{\TeX} -- A thin python \cite{python} wrapper for {\LaTeX} and \textsc{Bib}\TeX
+
+\begin{verbatim}
+NAME
+   pytex
+SYNOPSIS
+   pytex file [options]
+DESCRIPTION
+   A thin wrapper for pdflatex and bibtex. It will 
+   run pdflatex on the input file and re-compile it 
+   if needed (eg to fix cross references). If necessary
+   it will call bibtex to compile the bibliography from 
+   the correponding auxiliary file.
+
+   The following option are available
+
+   -h --help	print this help 
+
+   -o --options	opt
+        string with an option passed to the pdflatex binary
+        Use -o of short and --option for long options 
+
+   -b --bibtex	
+        force bibtex to be run even if no bibtex 
+        warning is issued when running pdflatex
+   
+   -r 	 remove auxiliary files, will remove all
+        auxiliary files BEFORE compiling the input file
+        except for file.bib
+\end{verbatim}
+
+\bibliography{sample}
+\bibliographystyle{plain}
 
 
 \end{document}

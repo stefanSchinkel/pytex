@@ -11,82 +11,69 @@
 	Requirements:
 		- pdflatex/bibtex in your $PATH	
 
-	* Copyright (c) 2008, Stefan Schinkel, University of Potsdam
-	* All rights reserved.
-	*
-	* Redistribution and use in source and binary forms, with or without
-	* modification, are permitted provided that the following conditions are met:
-	*     * Redistributions of source code must retain the above copyright
-	*       notice, this list of conditions and the following disclaimer.
-	*     * Redistributions in binary form must reproduce the above copyright
-	*       notice, this list of conditions and the following disclaimer in the
-	*       documentation and/or other materials provided with the distribution.
-	*     * Neither the name of the University of Potsdam nor the
-	*       names of its contributors may be used to endorse or promote products
-	*       derived from this software without specific prior written permission.
-	*
-	* THIS SOFTWARE IS PROVIDED BY Stefan Schinkel ''AS IS'' AND ANY
-	* EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-	* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-	* DISCLAIMED. IN NO EVENT SHALL Stefan Schinkel BE LIABLE FOR ANY
-	* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-	* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-	* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-	* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-	* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-	* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+	* ----------------------------------------------------------------------------
+	* "THE BEER-WARE LICENSE" (Revision 42):
+	* <stefan.schinkel@gmail.com> wrote this file. As long as you retain this notice you
+	* can do whatever you want with this stuff. If we meet some day, and you think
+	* this stuff is worth it, you can buy me a beer in return Stefan Schinkel 
+	* ----------------------------------------------------------------------------
 
 """
 
-__version__ = "0.1"
+__version__ = "0.2"
 
 #Imports
-import sys,os
+import sys,os,getopt
 
 ##########################
-##	I/O check	##
+###		Functions 		##
 ##########################
+def printHelp():
+	"""
+	Prints the help message.
+	"""
+	print """
+NAME
+   pytex
+SYNOPSIS
+   pytex file [options]
+DESCRIPTION
+   A thin wrapper for pdflatex and bibtex. It will 
+   run pdflatex on the input file and re-compile it 
+   if needed (eg to fix cross references). If necessary
+   it will call bibtex to compile the bibliography from 
+   the correponding auxiliary file.
 
-try: 
-	texFile = sys.argv[1] 
-except IndexError:
-		print "This is PyTeX Version: %s\n" % __version__
-		print "ERROR: No latex file given!"
-		print "Calling convention: pytex latexFile(.tex)\n" 		
-		exit(-1)
+   The following option are available
 
+   -h --help	print this help 
 
-# MY pdflatex is smart enough to deal with extensionless TeX files others may not. 
-if texFile.endswith(".tex"):
-	pass
-elif texFile.endswith("."):# due to tabcompletion
-	texFile = texFile + "tex"
-else:
-	texFile = texFile + ".tex"
+   -o --options	opt
+   	string with an option passed to the pdflatex binary
+	Use -o of short and --option for long options 
 
-try: 
-	tmp = sys.argv[2] 
-	flagRemoveAux = True
-except IndexError:
-	flagRemoveAux = False
+   -b --bibtex	
+   	force bibtex to be run even if no bibtex 
+   	warning is issued when running pdflatex
+   
+   -r 	remove auxiliary files, will remove all
+	auxiliary files BEFORE compiling the input file
+	except for file.bib
 
-
-##########################
-##	Functions 	##
-##########################
+"""
 
 def runLatex(file):
-	
 	"""
 	This function opens a pipe to the pdflatex binary,
 	compiles the file & parses the log. 
 	"""
 
 	#assemble command and force latex to not stop
-	cmd = "pdflatex --shell-escape -interaction=nonstopmode " + texFile
+	cmd = "pdflatex -interaction=nonstopmode " + texFile
 
-	# empty logMessage & default errorCode
-	logMessage = [];errorCode = 0	
+	# empty logMessage, errorMessage & default errorCode
+	logMessage = [];errorMessages = []; errorCode = 0	
 	
 	# store log in list
 	runLog = os.popen(cmd).readlines()
@@ -111,21 +98,19 @@ def runLatex(file):
 		elif "Citation" in line:
 			logMessage.append(line)			
 			errorCode = 2		
-			continue
+			break 
 		elif "LaTeX Warning" in line: 
 			logMessage.append(line)			
 			errorCode = 3		
 	
-	#print "Errorcode is " + str(errorCode)
-						
 	return (logMessage,errorCode)
 
 def runBibtex(file):			
-
 	"""
-	Call bibtex on auxilary file
+	Call bibtex on auxiliary file
 	"""
 
+	print "Running bibTeX"
 	cmd = "bibtex " + texFile[:-4] + ".aux"
 	os.popen(cmd)	
 
@@ -136,6 +121,67 @@ def printLog(logMessage):
 	for line in logMessage:
 		print line[:-2]
 
+
+def parseArgs(args):
+	"""
+	Check argv for input file, check 
+	file extension and return to caller
+	"""
+	try: 
+		texFile = args[1] 
+	except IndexError:
+		printHelp()	
+		exit(-1)
+
+	# MY pdflatex is smart enough to deal with 
+	# extensionless TeX files others may not. 
+	if texFile.endswith(".tex"):
+		pass
+	elif texFile.endswith("."):# due to tabcompletion
+		texFile = texFile + "tex"
+	else:
+		texFile = texFile + ".tex"
+
+	return texFile
+
+def parseOpts(args):
+	"""
+	Parse the input for options passed. 
+	Should be called on sys.argv[2:] only
+	as sys.argv[1] is the tex file 
+	Supported options
+	-h --help  		: print help
+	-o --options 	: option for pdflatex binary
+	-b --bibtex 	: force bibTex
+	-r 				: remove auxiliary files
+	"""
+	
+	# set the defaults
+	texOptions = '';
+	flagForceBibtex = False;
+	flagRemoveAux = False;
+
+	opts, args = getopt.getopt(args,"hro:b",["help","options=","bibtex"])
+	
+	for opt, arg in opts:
+
+		if opt == "-h" or opt == "--help":
+			printHelp()
+   			sys.exit(0)
+		elif opt in ("-o"):
+  			texOptions = "-" + arg
+  		elif opt in ("--options"):
+  			texOptions = "--" + arg
+		elif opt in ("-b", "--bibtex"):
+  			flagForceBibtex = True
+  		elif opt in ("-r"):
+  			flagRemoveAux = True
+	
+	# return in tuple
+	return(texOptions,flagForceBibtex,flagRemoveAux)
+
+
+
 ##########################
 ##	Implementation	##
 ##########################
@@ -144,49 +190,67 @@ if __name__ == '__main__':
 	# runCounters
 	latexRuns = 0;bibtexRuns = 0 
 
+	# parse argv for filename
+	texFile = parseArgs(sys.argv)
+
+	# get options if given
+	(texOptions,flagForceBibtex,flagRemoveAux) = parseOpts(sys.argv[2:])
+	
 	print "This is PyTeX Version: %s" % __version__	
 	print "Running pdflatex on file:  " + texFile	
 	
+	# remove auxiliary files, if requested
+	if flagRemoveAux == True: 
+ 		print "Removing auxiliary files"
+ 		for file in os.listdir('.'):
+ 			if file.startswith(texFile[:-4]) and file[-3:] not in ["bib","tex"] :
+ 				os.remove(file)
+
+	# print "Pdflatex option given: ", texOptions
+	# print "forceBibtex is" , flagForceBibtex
+	# print "flagRemoveAux is" , flagRemoveAux
+
 	#call function
 	while (bibtexRuns < 3) and (latexRuns <	 3):
 	
 		# compile tex
 		(logMessage,errorCode) = runLatex(texFile)
-	
+		
+		# if requested, ensure that bibtex is run
+		if flagForceBibtex == True:
+			runBibtex(file)
+
 		#increment latexCounter
 		latexRuns += 1
 		
-		if errorCode == 0: 	# all is well	
+		if errorCode == 0: 	
+			# ignoreable warning such as apacite	
+			# package being used
 			print "Successfully compiled " + texFile
 			break
 	
-		elif errorCode == 1: #critical error
-			
+		elif errorCode == 1: 
+			# critical error that has to
+			# be fixed in .tex file
 			print "The following error(s) occured:"		
 			printLog(logMessage)
-			break
+			sys.exit(0)
 		
-		elif errorCode == 2: # run bibTex
-			print "Undefined References. Running bibtex."	
+		elif errorCode == 2: 
+			# some reference is not found
+			# running bibtex is required 
 			runBibtex(file)
 			bibtexRuns += 1
 	
 		elif errorCode == 3: 
+			# some warning that should be fixed on re-compile
 			print "Latex warning. Recompiling."	
 			pass
 	
-	if errorCode == 3:
+	# if we are here and the logMessage is 
+	# not empty sth is messed up
+	if len(logMessage):
 		print "Unresolvable warning occurred."
 		printLog(logMessage)
 	
-	## remove auxilary files, if requested
-	if flagRemoveAux == True: 
-		print "Will remove auxilary files"
-
-		for item in ['log','aux','bbl','blg','spl','out']:
-			theFile = texFile[:-4] + "." + item
-			try:
-				os.remove(theFile)
-			except Exception, e:
-				print "Error:", e
 	

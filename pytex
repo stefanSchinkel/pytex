@@ -16,7 +16,8 @@
 	* "THE BEER-WARE LICENSE" (Revision 42):
 	* <stefan.schinkel@gmail.com> wrote this file. As long as you retain this notice you
 	* can do whatever you want with this stuff. If we meet some day, and you think
-	* this stuff is worth it, you can buy me a beer in return Stefan Schinkel 
+	* this stuff is worth it, you can buy me a beer in return 
+	* Stefan Schinkel 
 	* ----------------------------------------------------------------------------
 
 """
@@ -24,7 +25,7 @@
 __version__ = "0.2"
 
 #Imports
-import sys,os,getopt
+import sys,os,os.path,getopt
 
 ##########################
 ###		Functions 		##
@@ -146,7 +147,12 @@ def parseArgs(args):
 	else:
 		texFile = texFile + ".tex"
 
-	return texFile
+	if os.path.isfile(texFile):
+		return texFile
+	else:
+		print "Error: Input file not found"
+		sys.exit(-1)
+
 
 def parseOpts(args):
 	"""

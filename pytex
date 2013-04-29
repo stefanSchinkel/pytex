@@ -63,15 +63,18 @@ DESCRIPTION
 
 """
 
-def runLatex(file):
+def runLatex(file,opt):
 	"""
 	This function opens a pipe to the pdflatex binary,
 	compiles the file & parses the log. 
 	"""
 
-	#assemble command and force latex to not stop
-	cmd = "pdflatex -interaction=nonstopmode " + texFile
 
+	#assemble command and force latex to run non-stop
+	if len(opt) > 0:
+		cmd = "pdflatex " + opt + " -interaction=nonstopmode " + texFile
+	else:
+		cmd = "pdflatex -interaction=nonstopmode " + texFile
 	# empty logMessage, errorMessage & default errorCode
 	logMessage = [];errorMessages = []; errorCode = 0	
 	
@@ -99,7 +102,7 @@ def runLatex(file):
 			logMessage.append(line)			
 			errorCode = 2		
 			break 
-		elif "LaTeX Warning" in line: 
+		elif "Warning" in line: 
 			logMessage.append(line)			
 			errorCode = 3		
 	
@@ -214,8 +217,11 @@ if __name__ == '__main__':
 	while (bibtexRuns < 3) and (latexRuns <	 3):
 	
 		# compile tex
-		(logMessage,errorCode) = runLatex(texFile)
-		
+		if len(texOptions) > 0:
+			(logMessage,errorCode) = runLatex(texFile,texOptions)
+		else:
+			(logMessage,errorCode) = runLatex(texFile)
+
 		# if requested, ensure that bibtex is run
 		if flagForceBibtex == True:
 			runBibtex(file)

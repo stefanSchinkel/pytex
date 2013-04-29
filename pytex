@@ -104,6 +104,7 @@ def runLatex(file,opt=''):
 			break 
 		elif "Warning" in line: 
 			logMessage.append(line)			
+			logMessage.append(runLog[i+1])
 			errorCode = 3		
 	
 	return (logMessage,errorCode)

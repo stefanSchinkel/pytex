@@ -63,7 +63,7 @@ DESCRIPTION
 
 """
 
-def runLatex(file,opt):
+def runLatex(file,opt=''):
 	"""
 	This function opens a pipe to the pdflatex binary,
 	compiles the file & parses the log. 
@@ -200,7 +200,7 @@ if __name__ == '__main__':
 	(texOptions,flagForceBibtex,flagRemoveAux) = parseOpts(sys.argv[2:])
 	
 	print "This is PyTeX Version: %s" % __version__	
-	print "Running pdflatex on file:  " + texFile	
+	print "Running pdflatex " + texOptions + " on file:  " + texFile	
 	
 	# remove auxiliary files, if requested
 	if flagRemoveAux == True: 

@@ -77,7 +77,7 @@ def runLatex(file,opt=''):
 	else:
 		cmd = "pdflatex -interaction=nonstopmode " + texFile
 	# empty logMessage, errorMessage & default errorCode
-	logMessage = [];errorMessages = []; errorCode = 0	
+	logMessage = [];errorMessage = []; errorCode = 0	
 	
 	# store log in list
 	runLog = os.popen(cmd).readlines()
@@ -94,21 +94,22 @@ def runLatex(file,opt=''):
 			errorCode = 0	
 			continue
 		if  "!" in line:
-			logMessage.append(line)		
-			logMessage.append(runLog[i+1])
+			errorMessage.append(line)		
+			errorMessage.append(runLog[i+1])
 			errorCode = 1
-			continue				
+			break				
 				
 		elif "Citation" in line:
 			logMessage.append(line)			
 			errorCode = 2		
 			break 
+
 		elif "Warning" in line: 
 			logMessage.append(line)			
 			logMessage.append(runLog[i+1])
 			errorCode = 3		
-	
-	return (logMessage,errorCode)
+			
+	return (errorCode,errorMessage,logMessage)
 
 def runBibtex(file):			
 	"""
@@ -216,18 +217,11 @@ if __name__ == '__main__':
  			if file.startswith(texFile[:-4]) and file[-3:] not in ["bib","tex"] :
  				os.remove(file)
 
-	# print "Pdflatex option given: ", texOptions
-	# print "forceBibtex is" , flagForceBibtex
-	# print "flagRemoveAux is" , flagRemoveAux
-
 	#call function
 	while (bibtexRuns < 3) and (latexRuns <	 3):
 	
 		# compile tex
-		if len(texOptions) > 0:
-			(logMessage,errorCode) = runLatex(texFile,texOptions)
-		else:
-			(logMessage,errorCode) = runLatex(texFile)
+		(errorCode,errorMessage,logMessage) = runLatex(texFile,texOptions)
 
 		# if requested, ensure that bibtex is run
 		if flagForceBibtex == True:
@@ -246,7 +240,7 @@ if __name__ == '__main__':
 			# critical error that has to
 			# be fixed in .tex file
 			print "The following error(s) occured:"		
-			printLog(logMessage)
+			printLog(errorMessage)
 			sys.exit(0)
 		
 		elif errorCode == 2: 
@@ -263,7 +257,7 @@ if __name__ == '__main__':
 	# if we are here and the logMessage is 
 	# not empty sth is messed up
 	if len(logMessage):
-		print "Unresolvable warning occurred."
+		print "The following warning occurred."
 		printLog(logMessage)
 	
 	

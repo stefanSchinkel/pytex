@@ -93,21 +93,27 @@ def runLatex(file,opt=''):
 			print "Apacite package used"			
 			errorCode = 0	
 			continue
-		if  "!" in line:
-			errorMessage.append(line)		
-			errorMessage.append(runLog[i+1])
-			errorCode = 1
-			break				
-				
 		elif "Citation" in line:
 			logMessage.append(line)			
 			errorCode = 2		
-			break 
-
+			break # also break if bibtex needs to be run
 		elif "Warning" in line: 
+			# warnings have to be caught first 
+			# as changing of float specifiers is common 
+			# and those often contain a "!"
 			logMessage.append(line)			
 			logMessage.append(runLog[i+1])
-			errorCode = 3		
+			errorCode = 3
+			continue
+		elif  "!" in line:
+			errorMessage.append(line)		
+			errorMessage.append(runLog[i+1])
+			errorCode = 1
+			break	# on a real error, break
+				
+
+
+
 			
 	return (errorCode,errorMessage,logMessage)
 

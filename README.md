@@ -1,26 +1,27 @@
-NAME
-   pytex
-SYNOPSIS
-   pytex file [options]
-DESCRIPTION
-   A thin wrapper for pdflatex and bibtex. It will
-   run pdflatex on the input file and re-compile it
-   if needed (eg to fix cross references). If necessary
-   it will call bibtex to compile the bibliography from
-   the correponding auxiliary file.
+README
+======
 
-   The following option are available
+###Name
 
-   -h --help   print this help
+pytex
 
-   -o --options   opt
-      string with an option passed to the pdflatex binary
-   Use -o of short and --option for long options
+###SYNOPSIS
 
-   -b --bibtex
-      force bibtex to be run even if no bibtex
-      warning is issued when running pdflatex
+   `pytex texFile [options]`
 
-   -r    remove auxiliary files, will remove all
-   auxiliary files BEFORE compiling the input file
-   except for file.bib
+###DESCRIPTION
+
+
+A thin wrapper for pdflatex and bibtex. It will
+run pdflatex on the input file and re-compile it
+if needed (eg to fix cross references). If necessary
+it will call bibtex to compile the bibliography from
+the correponding auxiliary file.
+
+The following option are available
+
+  * `-h` `--help` print  help
+  * `-o` string passed to the pdflatex binary (-o)
+  * `--options` string passed to the pdflatex binary (long option)
+  * `-b --bibtex` force bibtex runrunning pdflatex
+  * `-r` remove auxiliary files, removes all auxiliary files *BEFORE* compiling the input file except for file.bib

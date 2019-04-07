@@ -24,17 +24,21 @@ Requirements:
 
 __version__ = "0.2"
 
-#Imports
-import sys,os,os.path,getopt
+# Imports
+import os
+import sys
+import getopt
 
 ##########################
-###     Functions       ##
+##      Functions       ##
 ##########################
+
+
 def printHelp():
     """
     Prints the help message.
     """
-    print """
+    help_str = """
 NAME
    pytex
 SYNOPSIS
@@ -63,75 +67,76 @@ DESCRIPTION
     except for file.bib
 
 """
+    print(help_str)
 
-def runLatex(file,opt=''):
+
+def runLatex(file, opt=''):
     """
     This function opens a pipe to the pdflatex binary,
     compiles the file & parses the log.
     """
 
-
-    #assemble command and force latex to run non-stop
+    # assemble command and force latex to run non-stop
     if len(opt) > 0:
         cmd = "pdflatex " + opt + " -interaction=nonstopmode " + texFile
     else:
         cmd = "pdflatex -interaction=nonstopmode " + texFile
     # empty logMessage, errorMessage & default errorCode
-    logMessage = [];errorMessage = []; errorCode = 0
+    logMessage = []
+    errorMessage = []
+    errorCode = 0
 
     # store log in list
     runLog = os.popen(cmd).readlines()
 
-    #loop over list
-    for i in range(len(runLog)) :
+    # loop over list
+    for i in range(len(runLog)):
 
-        #current line
-        line = runLog[i];
+        # get current line
+        line = runLog[i]
 
-        #this happens w/ the bloody APAcite
+        # this happens w/ the bloody APAcite
         if "NOT AUSTRALIAN!!!" in line:
-            print "Apacite package used"
+            print("Apacite package used")
             errorCode = 0
             continue
         elif "Citation" in line:
             logMessage.append(line)
             errorCode = 2
-            break # also break if bibtex needs to be run
+            break  # also break if bibtex needs to be run
         elif "Warning" in line:
             # warnings have to be caught first
             # as changing of float specifiers is common
             # and those often contain a "!"
             logMessage.append(line)
-            logMessage.append(runLog[i+1])
+            logMessage.append(runLog[i + 1])
             errorCode = 3
             continue
-        elif  "!" in line:
+        elif "!" in line:
             errorMessage.append(line)
-            errorMessage.append(runLog[i+1])
+            errorMessage.append(runLog[i + 1])
             errorCode = 1
             break   # on a real error, break
 
+    return (errorCode, errorMessage, logMessage)
 
-
-
-
-    return (errorCode,errorMessage,logMessage)
 
 def runBibtex(file):
     """
     Call bibtex on auxiliary file
     """
 
-    print "Running bibTeX"
+    print("Running bibTeX")
     cmd = "bibtex " + texFile[:-4] + ".aux"
     os.popen(cmd)
+
 
 def printLog(logMessage):
     """
         shorthand for printing logs
     """
     for line in logMessage:
-        print line[:-2]
+        print(line[:-2])
 
 
 def parseArgs(args):
@@ -149,7 +154,8 @@ def parseArgs(args):
     # extensionless TeX files others may not.
     if texFile.endswith(".tex"):
         pass
-    elif texFile.endswith("."):# due to tabcompletion
+    # due to tabcompletion
+    elif texFile.endswith("."):
         texFile = texFile + "tex"
     else:
         texFile = texFile + ".tex"
@@ -157,7 +163,7 @@ def parseArgs(args):
     if os.path.isfile(texFile):
         return texFile
     else:
-        print "Error: Input file not found"
+        print("Error: Input file not found")
         sys.exit(-1)
 
 
@@ -174,11 +180,11 @@ def parseOpts(args):
     """
 
     # set the defaults
-    texOptions = '';
-    flagForceBibtex = False;
-    flagRemoveAux = False;
+    texOptions = ''
+    flagForceBibtex = False
+    flagRemoveAux = False
 
-    opts, args = getopt.getopt(args,"hro:b",["help","options=","bibtex"])
+    opts, args = getopt.getopt(args, "hro:b", ["help", "options=", "bibtex"])
 
     for opt, arg in opts:
 
@@ -195,57 +201,53 @@ def parseOpts(args):
             flagRemoveAux = True
 
     # return in tuple
-    return(texOptions,flagForceBibtex,flagRemoveAux)
+    return(texOptions, flagForceBibtex, flagRemoveAux)
 
-
-
-##########################
-##  Implementation  ##
-##########################
 
 if __name__ == '__main__':
     # runCounters
-    latexRuns = 0;bibtexRuns = 0
+    latexRuns = 0
+    bibtexRuns = 0
 
     # parse argv for filename
     texFile = parseArgs(sys.argv)
 
     # get options if given
-    (texOptions,flagForceBibtex,flagRemoveAux) = parseOpts(sys.argv[2:])
+    (texOptions, flagForceBibtex, flagRemoveAux) = parseOpts(sys.argv[2:])
 
-    print "This is PyTeX Version: %s" % __version__
-    print "Running pdflatex " + texOptions + " on file:  " + texFile
+    print("This is PyTeX Version: %s" % __version__)
+    print("Running pdflatex " + texOptions + " on file:  " + texFile)
 
     # remove auxiliary files, if requested
-    if flagRemoveAux == True:
-        print "Removing auxiliary files"
+    if flagRemoveAux is True:
+        print("Removing auxiliary files")
         for file in os.listdir('.'):
-            if file.startswith(texFile[:-4]) and file[-3:] not in ["bib","tex"] :
+            if file.startswith(texFile[:-4]) and file[-3:] not in ["bib", "tex"]:
                 os.remove(file)
 
-    #call function
-    while (bibtexRuns < 3) and (latexRuns <  3):
+    # call function
+    while (bibtexRuns < 3) and (latexRuns < 3):
 
         # compile tex
-        (errorCode,errorMessage,logMessage) = runLatex(texFile,texOptions)
+        (errorCode, errorMessage, logMessage) = runLatex(texFile, texOptions)
 
         # if requested, ensure that bibtex is run
-        if flagForceBibtex == True:
+        if flagForceBibtex is True:
             runBibtex(file)
 
-        #increment latexCounter
+        # increment latexCounter
         latexRuns += 1
 
         if errorCode == 0:
             # ignoreable warning such as apacite
             # package being used
-            print "Successfully compiled " + texFile
+            print("Successfully compiled " + texFile)
             break
 
         elif errorCode == 1:
             # critical error that has to
             # be fixed in .tex file
-            print "The following error(s) occured:"
+            print("The following error(s) occured:")
             printLog(errorMessage)
             sys.exit(0)
 
@@ -257,12 +259,11 @@ if __name__ == '__main__':
 
         elif errorCode == 3:
             # some warning that should be fixed on re-compile
-            print "Latex warning. Recompiling."
+            print("Latex warning. Recompiling.")
             pass
 
     # if we are here and the logMessage is
     # not empty sth is messed up
     if len(logMessage):
-        print "The following warning occurred."
+        print("The following warning occurred.")
         printLog(logMessage)
-

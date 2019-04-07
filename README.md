@@ -1,15 +1,19 @@
 README
 ======
 
-###Name
+### Name
 
 pytex
 
-###SYNOPSIS
+### Requirements:
 
-   `pytex texFile [options]`
+  - pdflatex/bibtex in your $PATH
 
-###DESCRIPTION
+### SYNOPSIS
+
+`pytex.py texFile [options]`
+
+### DESCRIPTION
 
 
 A thin wrapper for pdflatex and bibtex. It will

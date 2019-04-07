@@ -1,37 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-"""
-Purpose:
-    A thin wrapper for pdflatex/bibtex.
-    Once called, the wrapper compiles & recompiles
-    the LaTeX file given to fix references/crosslinks.
-    Further it calls bibtex whenever needed.
-
-Requirements:
-    - pdflatex/bibtex in your $PATH
-
-
-* ----------------------------------------------------------------------------
-* "THE BEER-WARE LICENSE" (Revision 42):
-* <mail@dreeg.org> wrote this file. As long as you retain this notice you
-* can do whatever you want with this stuff. If we meet some day, and you think
-* this stuff is worth it, you can buy me a beer in return
-* Stefan Schinkel
-* ----------------------------------------------------------------------------
-
-"""
-
-__version__ = "0.2"
-
-# Imports
 import os
 import sys
 import getopt
 
-##########################
-##      Functions       ##
-##########################
+__version__ = "0.2"
 
 
 def printHelp():
@@ -245,15 +218,13 @@ if __name__ == '__main__':
             break
 
         elif errorCode == 1:
-            # critical error that has to
-            # be fixed in .tex file
+            # critical error, has to be fixed in .tex file
             print("The following error(s) occured:")
             printLog(errorMessage)
             sys.exit(0)
 
         elif errorCode == 2:
-            # some reference is not found
-            # running bibtex is required
+            # some reference is not found, running bibtex is required
             runBibtex(file)
             bibtexRuns += 1
 
@@ -262,8 +233,7 @@ if __name__ == '__main__':
             print("Latex warning. Recompiling.")
             pass
 
-    # if we are here and the logMessage is
-    # not empty sth is messed up
+    # if we are here and the logMessage is not empty sth is messed up
     if len(logMessage):
         print("The following warning occurred.")
         printLog(logMessage)
